@@ -1,0 +1,13 @@
+#### Vagrant ####
+.vagrant
+
+#### Python ####
+env
+venv
+.env
+.venv
+
+#### Environment ####
+.env
+
+
