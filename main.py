@@ -1,10 +1,28 @@
-import os
-import telebot
 from dotenv import load_dotenv
+import psutil
+import subprocess
+import telebot
+import paramiko
+import yaml
+import os
 
-# load API_KEY from .env
-# put your API_KEY in ".env" file
-# API_KEY=<token>
+with open('inventory.yml', 'r') as file:
+    servers = yaml.load(file, Loader=yaml.FullLoader)
+
+def connect_to_servers(ip, username, password):
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(ip, username=username, password=password)
+    return client
+
+for server in servers['servers']:
+    ip = server['ip']
+    username = server['username']
+    password = server['password']
+
+    ssh_client = connect_to_servers(ip, username, password)
+    ssh_client.close()
+
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
@@ -33,12 +51,6 @@ Bots
 def check(message):
     bot.send_message(message.chat.id, "The server is alive")
 
-
-# get system info
-
-import psutil
-import subprocess
-
 # disk usage (/disk)
 @bot.message_handler(commands=['disk'])
 def disk(message):
@@ -55,7 +67,6 @@ Used = {} GB
 Avail = {} GB
 Usage = {} %\n'''.format(diskTotal,diskUsed,diskAvail,diskPercent)
     bot.send_message(message.chat.id,msg)
-
 
 # cpu & ram (/sysinfo)
 @bot.message_handler(commands=['sysinfo'])
@@ -83,7 +94,6 @@ def uptime(message):
     msg = upTime
     bot.send_message(message.chat.id,msg)
 
-
 # server desc (/server)
 @bot.message_handler(commands=['server'])
 def server(message):
@@ -98,78 +108,6 @@ Hostname = {}
 IP Addr = {}'''.format(uname,host,ipAddr)
     bot.send_message(message.chat.id,msg)
 
-
 # listen to telegram commands
 bot.polling()
 
-
-
-# import os
-# import telebot
-
-# BOT_TOKEN = os.environ.get('BOT_TOKEN')
-
-# bot = telebot.TeleBot(BOT_TOKEN)
-
-# @bot.message_handler(commands=['start', 'hello'])
-# def send_welcome(message):
-#     bot.reply_to(message, "Howdy, how are you doing?")
-
-# @bot.message_handler(func=lambda msg: True)
-# def echo_all(message):
-#     bot.reply_to(message, message.text)
-
-
-# @bot.message_handler(commands=['help'])
-# def help(message):
-#     msg = '''
-
-# Server Monitoring Bot
-# ---------
-# 1. Disk Usage → /disk
-# 2. CPU and RAM Usage → /sysinfo
-# 3. Uptime Server → /uptime
-# 4. Server Description → /server
-# Help → /help
-# Regards,
-# Bots
-# ---------
-
-#     '''
-#     bot.reply_to(message.text, msg)
-
-# bot.infinity_polling()
-
-# # import os
-# # import telebot
-# # # import collector
-# # from dotenv import load_dotenv
-
-
-# # load_dotenv()
-# # API_KEY = os.getenv("API_KEY")
-# # bot = telebot.TeleBot(API_KEY)
-
-# # @bot.message_handler(commands=['hello_vagrant'])
-# # def hello(message):
-# #     bot.reply_to(message, "Hi, I'am Server Monitoring Bot")
-
-# # @bot.message_handler(commands=['check'])
-# # def check(message):
-# #     bot.send_message(message.chat.id, "The server is alive")
-
-# # # @bot.message_handler(commands=['start','help'])
-# # # def help(message):
-# # #     msg = '''
-# # # Server Monitoring Bot
-# # # ---------
-# # # 1. Disk Usage → /disk
-# # # 2. CPU and RAM Usage → /sysinfo
-# # # 3. Uptime Server → /uptime
-# # # 4. Server Description → /server
-# # # Help → /help
-# # # Regards,
-# # # Bots
-# # # ---------
-# # #     '''
-# # #     bot.send_message(message.chat.id, msg)
