@@ -1,25 +1,22 @@
-import psutil
-import subprocess
+import paramiko
+import yaml
 
-#### Disk Usage ####
-diskTotal = int(psutil.disk_usage('/').total/(1024*1024*1024))
-diskUsed = int(psutil.disk_usage('/').used/(1024*1024*1024))
-diskAvailable = int(psutil.disk_usage('/').free/(1024*1024*1024))
-diskPercent = psutil.disk_usage('/').percent
+class ServerConnector:
 
-#### Memory Usage ####
-memTotal = psutil.virtual_memory().total/(1024*1024*1024)
-memUsage = psutil.virtual_memory().used/(1024*1024*1024)
-memAvailable = psutil.virtual_memory().free/(1024*1024*1024)
-memUsagePercent = psutil.virtual_memory().percent
+    def __init__(self, servers):
+        self.servers = servers
 
-#### CPU Usage ####
-cpuUsage = psutil.cpu_percent(interval=1)
+    def connect_to_server(self, ip, username, password):
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        client.connect(ip, username=username, password=password)
+        return client
 
-####  Uptime Server ####
-upTime = subprocess.check_output(['uptime','-p']).decode('UTF-8')
+    def connect_all_servers(self):
+        for server in self.servers:
+            ip = server['ip']
+            username = server['username']
+            password = server['password']
 
-#### Server Description ####
-uname = subprocess.check_output(['uname','-rsoi']).decode('UTF-8')
-host = subprocess.check_output(['hostname']).decode('UTF-8')
-ipAddr = subprocess.check_output(['hostname','-I']).decode('UTF-8')
+            ssh_client = self.connect_to_server(ip, username, password)
+            ssh_client.close()
